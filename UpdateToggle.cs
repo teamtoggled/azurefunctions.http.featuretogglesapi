@@ -50,23 +50,33 @@ namespace UpdateFeatureToggles
                 IAsyncCollector<FeatureToggle> featureTogglesOut,
             ILogger log)
         {
+            log.LogInformation($"Running for {req.Path.ToString()}");
+
             var apiKey = req.Headers["x-api-key"].ToString();
 
             if(string.IsNullOrWhiteSpace(apiKey))
+            {
+                log.LogInformation("API key was missing. Returning BadRequest.");
+
                 return new BadRequestObjectResult(new {
                     updated = false,
                     info = "An x-api-key header was not present."
                 });
+            }
 
             log.LogInformation($"API key: {apiKey}");
 
             var postModel = GetPostModel(req, log);
 
             if(postModel == null)
+            {
+                log.LogInformation("Request body was invalid. Returning BadRequest.");
+
                 return new BadRequestObjectResult(new {
                     updated = false,
                     info = "The body was invalid, please ensure a json-encoded object is passed."
                 });
+            }
 
             log.LogInformation($"New value: {postModel.NewFeatureSwitchValue}");
 
