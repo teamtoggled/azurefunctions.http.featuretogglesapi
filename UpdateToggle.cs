@@ -49,7 +49,7 @@ namespace UpdateFeatureToggles
             log.LogInformation($"API key: {apiKey}");
 
             var postModel = GetPostModel(req, log);
-            log.LogInformation($"New value: {postModel.NewFeatureSwitchValue}")
+            log.LogInformation($"New value: {postModel.NewFeatureSwitchValue}");
 
             if(featureToggleIn != null)
             {
