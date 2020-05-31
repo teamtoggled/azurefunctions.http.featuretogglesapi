@@ -55,7 +55,7 @@ namespace UpdateFeatureToggles
     {
         [FunctionName("UpdateToggle")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = "configurations/{configurationId}/featuretoggles/{featureToggleId}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "configurations/{configurationId}/featuretoggles/{featureToggleId}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "toggled",
                 collectionName: "beta-featuretoggles",
