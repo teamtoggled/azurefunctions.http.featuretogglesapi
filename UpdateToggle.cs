@@ -10,52 +10,28 @@ using Newtonsoft.Json;
 
 namespace UpdateFeatureToggles
 {
-    public class LastUpdatedInfo 
+    public class BodyPostModel 
     {
-        [JsonProperty("on")] 
-        public string On {get; set;}
-        
-        [JsonProperty("by")]
-        public LastUpdatedBy By {get; set;}
-    }
-
-    public class LastUpdatedBy 
-    {
-        [JsonProperty("id")]
-        public Guid Id {get; set;}
-        
-        [JsonProperty("name")]
-        public string Name {get; set;}
-    }
-    public class FeatureToggle 
-    {
-        [JsonProperty("id")]
-        public Guid Id {get; set;}
-        
-        [JsonProperty("type")]
-        public string Type {get; set;}
-        
-        [JsonProperty("configurationId")]
-        public Guid ConfigurationId {get; set;}
-        
-        [JsonProperty("name")]
-        public string Name {get; set;}
-        
-        [JsonProperty("state")]
-        public bool State {get; set;}
-        
-        [JsonProperty("lastUpdated")]
-        public LastUpdatedInfo LastUpdated {get; set;}
-        
-        [JsonProperty("signalRVaultUrl")]
-        public string SignalRVaultUrl {get; set;}
+        public bool NewFeatureSwitchValue {get; set;}
     }
 
     public static class UpdateToggle
     {
+        public static BodyPostModel GetPostModel(HttpRequest req, ILogger log)
+        {
+            using (var reader = new StreamReader(req.Body))
+            {
+                var body = reader.ReadToEnd();
+                
+                log.LogInformation($"Request body: {body}");
+
+                return JsonConvert.DeserializeObject<BodyPostModel>(body);                
+            }
+        }
+
         [FunctionName("UpdateToggle")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = "configurations/{configurationId}/featuretoggles/{featureToggleId}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "configurations/{configurationId}/featuretoggles/{featureToggleId}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "toggled",
                 collectionName: "beta-featuretoggles",
@@ -69,11 +45,16 @@ namespace UpdateFeatureToggles
                 IAsyncCollector<FeatureToggle> featureTogglesOut,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            var apiKey = req.Headers["Api-Key"].ToString();
+            log.LogInformation($"API key: {apiKey}");
+
+            var postModel = GetPostModel(req, log);
+            log.LogInformation($"New value: {postModel.NewFeatureSwitchValue}")
+
             if(featureToggleIn != null)
             {
                 log.LogInformation($"Got a toggle named {featureToggleIn.Name}");
-
+               
                 featureToggleIn.LastUpdated.On = DateTime.UtcNow.ToString("O");
                 await featureTogglesOut.AddAsync(featureToggleIn);
 
