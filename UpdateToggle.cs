@@ -10,23 +10,28 @@ using Newtonsoft.Json;
 
 namespace UpdateFeatureToggles
 {
-    public class BodyPostModel 
-    {
-        public bool NewFeatureSwitchValue {get; set;}
-    }
-
     public static class UpdateToggle
     {
         public static BodyPostModel GetPostModel(HttpRequest req, ILogger log)
         {
-            using (var reader = new StreamReader(req.Body))
+            try
             {
-                var body = reader.ReadToEnd();
-                
-                log.LogInformation($"Request body: {body}");
+                using (var reader = new StreamReader(req.Body))
+                {
+                    var body = reader.ReadToEnd();
+                    
+                    log.LogInformation($"Request body: {body}");
 
-                return JsonConvert.DeserializeObject<BodyPostModel>(body);                
+                    if(string.IsNullOrWhiteSpace(body))
+                        return null;
+
+                    return JsonConvert.DeserializeObject<BodyPostModel>(body);                
+                }
             }
+            catch (Exception)
+            {
+                return null;
+            }            
         }
 
         [FunctionName("UpdateToggle")]
@@ -45,20 +50,40 @@ namespace UpdateFeatureToggles
                 IAsyncCollector<FeatureToggle> featureTogglesOut,
             ILogger log)
         {
-            var apiKey = req.Headers["Api-Key"].ToString();
+            var apiKey = req.Headers["x-api-key"].ToString();
+
+            if(string.IsNullOrWhiteSpace(apiKey))
+                return new BadRequestObjectResult(new {
+                    updated = false,
+                    info = "An x-api-key header was not present."
+                });
+
             log.LogInformation($"API key: {apiKey}");
 
             var postModel = GetPostModel(req, log);
+
+            if(postModel == null)
+                return new BadRequestObjectResult(new {
+                    updated = false,
+                    info = "The body was invalid, please ensure a json-encoded object is passed."
+                });
+
             log.LogInformation($"New value: {postModel.NewFeatureSwitchValue}");
 
             if(featureToggleIn != null)
             {
-                log.LogInformation($"Got a toggle named {featureToggleIn.Name}");
+                log.LogInformation($"Found a feature toggle matching ID, named {featureToggleIn.Name}");
                
                 featureToggleIn.LastUpdated.On = DateTime.UtcNow.ToString("O");
+                featureToggleIn.State = postModel.NewFeatureSwitchValue;
+
                 await featureTogglesOut.AddAsync(featureToggleIn);
 
-                return new OkObjectResult("We've updated the LastUpdated.On of toggle.");
+                var result = new {
+                    updated = true
+                };
+
+                return new OkObjectResult(result);
             }
             else
             {
