@@ -41,7 +41,7 @@ namespace UpdateFeatureToggles
                 databaseName: "toggled",
                 collectionName: "beta-featuretogles",
                 ConnectionStringSetting = "CosmosDbConnection",
-                Id = "{id}",
+                Id = "{featureToggleId}",
                 PartitionKey = "{configurationId}")] FeatureToggle featureToggleIn,
             [CosmosDB(
                 databaseName: "toggled",
