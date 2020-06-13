@@ -39,13 +39,13 @@ namespace UpdateFeatureToggles
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "configurations/{configurationId}/featuretoggles/{featureToggleId}")] HttpRequest req,
             [CosmosDB(
                 databaseName: "toggled",
-                collectionName: "beta-featuretoggles",
+                collectionName: "part-configurationId",
                 ConnectionStringSetting = "CosmosDbConnection",
                 Id = "{featureToggleId}",
                 PartitionKey = "{configurationId}")] FeatureToggle featureToggleIn,
             [CosmosDB(
                 databaseName: "toggled",
-                collectionName: "beta-featuretoggles",
+                collectionName: "part-configurationId",
                 ConnectionStringSetting = "CosmosDbConnection")]
                 IAsyncCollector<FeatureToggle> featureTogglesOut,
             ILogger log)
