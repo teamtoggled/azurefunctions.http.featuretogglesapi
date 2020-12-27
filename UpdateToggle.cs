@@ -97,7 +97,7 @@ namespace UpdateFeatureToggles
                     Id = Guid.NewGuid(),
                     ConfigurationId = featureToggleIn.ConfigurationId,
                     FeatureToggleId = featureToggleIn.Id,
-                    UpdatedBy = "Ben",
+                    UpdatedBy = $"API with key: {apiKey}",
                     UpdatedDateTimeUtc = DateTime.Now.ToString("o"),                    
                     UpdatedToValue = postModel.NewFeatureSwitchValue.ToString()
                 });
