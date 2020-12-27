@@ -19,10 +19,7 @@ namespace UpdateFeatureToggles
         
         [JsonProperty("state")]
         public bool State {get; set;}
-        
-        [JsonProperty("lastUpdated")]
-        public LastUpdatedInfo LastUpdated {get; set;}
-        
+               
         [JsonProperty("signalRVaultUrl")]
         public string SignalRVaultUrl {get; set;}
     }

@@ -48,6 +48,11 @@ namespace UpdateFeatureToggles
                 collectionName: "part-configurationId",
                 ConnectionStringSetting = "CosmosDbConnection")]
                 IAsyncCollector<FeatureToggle> featureTogglesOut,
+            [CosmosDB(
+                databaseName: "toggled",
+                collectionName: "part-configurationId",
+                ConnectionStringSetting = "CosmosDbConnection")]
+                IAsyncCollector<FeatureToggleAudit> featureToggleAuditsOut,
             ILogger log)
         {
             log.LogInformation($"Running for {req.Path.ToString()}");
@@ -84,10 +89,21 @@ namespace UpdateFeatureToggles
             {
                 log.LogInformation($"Found a feature toggle matching ID, named {featureToggleIn.Name}");
                
-                featureToggleIn.LastUpdated.On = DateTime.UtcNow.ToString("O");
                 featureToggleIn.State = postModel.NewFeatureSwitchValue;
 
-                await featureTogglesOut.AddAsync(featureToggleIn);
+                var firstTask = featureTogglesOut.AddAsync(featureToggleIn);
+
+                var secondTask = featureToggleAuditsOut.AddAsync(new FeatureToggleAudit() {
+                    Id = Guid.NewGuid(),
+                    ConfigurationId = featureToggleIn.ConfigurationId,
+                    FeatureToggleId = featureToggleIn.Id,
+                    UpdatedBy = "Ben",
+                    UpdatedDateTimeUtc = DateTime.Now.ToString("o"),                    
+                    UpdatedToValue = postModel.NewFeatureSwitchValue.ToString()
+                });
+
+                await firstTask; 
+                await secondTask;
 
                 var result = new {
                     updated = true
